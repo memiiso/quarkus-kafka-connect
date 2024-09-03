@@ -7,6 +7,7 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.redpanda.RedpandaContainer;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
+import org.testcontainers.utility.MountableFile;
 
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
@@ -20,7 +21,7 @@ class KafkaConnectRunnerDockerTest {
     String kafkaHostname = "kafka";
     RedpandaContainer kafka = new RedpandaContainer("docker.redpanda.com/redpandadata/redpanda:v23.1.2")
 //        .withExposedPorts(9644, 9092, 8081, 8082, 29092)
-        .withCommand("redpanda", "start", "--overprovisioned", "--smp", "1", "--memory", "1G", "--reserve-memory", "0M", "--node-id", "0", "--kafka-addr", "PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092", "--advertise-kafka-addr", "PLAINTEXT://+" + kafkaHostname + "+:29092,OUTSIDE://localhost:9092", "--check=false")
+        .withCommand("redpanda", "start", "--overprovisioned", "--smp", "1", "--memory", "1G", "--reserve-memory", "0M", "--node-id", "0", "--kafka-addr", "PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092", "--advertise-kafka-addr", "PLAINTEXT://" + kafkaHostname + ":29092,OUTSIDE://localhost:9092", "--check=false")
         .withNetwork(network)
         .withNetworkAliases(kafkaHostname);
     // -----------------------------------------------------------
@@ -46,6 +47,12 @@ class KafkaConnectRunnerDockerTest {
         .withEnv("CONNECT_STATUS_STORAGE_TOPIC", "_connectors_status")
         .withEnv("CONNECT_KEY_CONVERTER", "org.apache.kafka.connect.storage.StringConverter")
         .withEnv("CONNECT_VALUE_CONVERTER", "org.apache.kafka.connect.storage.StringConverter")
+        .withEnv("CONNECT_PLUGIN_PATH", "/deployments/lib/")
+//        .withCopyToContainer(Transferable.of("src/main/resources/application.properties"), "/deployments/application.properties")
+        .withCopyFileToContainer(
+            MountableFile.forHostPath(Paths.get("src/main/resources/application.properties")),
+            "/deployments/application.properties"
+        )
         .withExposedPorts(8083);
     // -----------------------------------------------------------
     kafkaConnect.start();

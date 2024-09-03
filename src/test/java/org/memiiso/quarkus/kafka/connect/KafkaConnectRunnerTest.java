@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.redpanda.RedpandaContainer;
 
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -37,6 +38,7 @@ class KafkaConnectRunnerTest {
       //////////////////////////////////////////////////////////////////////
       Map<String, String> config = new ConcurrentHashMap<>();
       config.put("connect.bootstrap.servers", kafka.getHost() + ":" + kafka.getMappedPort(9092));
+      config.put("connect.plugin.path", Paths.get("build/quarkus-app/lib/main").toAbsolutePath().toString());
       return config;
     }
   }
